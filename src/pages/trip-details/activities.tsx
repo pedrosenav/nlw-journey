@@ -1,60 +1,68 @@
-import { Plus, CircleCheck } from 'lucide-react'
-import { Button } from '../components/button'
+import { CircleCheck } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { api } from '../../lib/axios'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
-interface ActivitiesProps {
-  openCreateActivityModal: () => void
+interface Activity {
+  date: string
+  activities: {
+    id: string
+    title: string
+    occurs_at: string
+  }[]
 }
 
-export default function Activities({
-  openCreateActivityModal,
-}: ActivitiesProps) {
+export default function Activities() {
+  const { tripId } = useParams()
+  const [activities, setActivities] = useState<Activity[]>([])
+
+  useEffect(() => {
+    api
+      .get(`/trips/${tripId}/activities`)
+
+      .then((res) => setActivities(res.data.activities))
+      .catch((err) => console.log(err))
+  }, [tripId])
+
   return (
-    <div className="flex-1 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-semibold">Atividades</h2>
-
-        <Button onClick={openCreateActivityModal}>
-          <Plus className="size-5" />
-          Cadastrar atividade
-        </Button>
-      </div>
-
-      {/* Activity */}
-      <div className="space-y-8">
-        <div className="space-y-2.5">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-semibold text-zinc-300">Dia 17</span>
-            <span className="text-xs text-zinc-500">Sábado</span>
-          </div>
-
-          <p className="text-sm text-zinc-500">Nenhuma ativdade cadastrada</p>
-        </div>
-      </div>
-
-      {/* Activity */}
-      <div className="space-y-8">
-        <div className="space-y-2.5">
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-semibold text-zinc-300">Dia 18</span>
-            <span className="text-xs text-zinc-500">Domingo</span>
-          </div>
-
-          {/* Activity Tasks */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-3 rounded-xl bg-zinc-900 px-4 py-2.5 shadow-shape">
-              <CircleCheck className="size-5 text-lime-300" />
-              <span className="text-zinc-100">Academia em grupo</span>
-              <span className="ml-auto text-sm text-zinc-400">08:00h</span>
+    <div className="space-y-8">
+      {activities.map((category) => {
+        return (
+          <div key={category.date} className="space-y-2.5">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-semibold text-zinc-300">
+                Dia {format(category.date, 'd')}
+              </span>
+              <span className="text-xs text-zinc-500">
+                {format(category.date, 'EEEE', { locale: ptBR })}
+              </span>
             </div>
-
-            <div className="flex items-center gap-3 rounded-xl bg-zinc-900 px-4 py-2.5 shadow-shape">
-              <CircleCheck className="size-5 text-lime-300" />
-              <span className="text-zinc-100">Academia em grupo</span>
-              <span className="ml-auto text-sm text-zinc-400">08:00h</span>
-            </div>
+            {category.activities.length > 0 ? (
+              <div>
+                {category.activities.map((activity) => {
+                  return (
+                    <div key={activity.id} className="space-y-2.5">
+                      <div className="flex items-center gap-3 rounded-xl bg-zinc-900 px-4 py-2.5 shadow-shape">
+                        <CircleCheck className="size-5 text-lime-300" />
+                        <span className="text-zinc-100">{activity.title}</span>
+                        <span className="ml-auto text-sm text-zinc-400">
+                          {format(activity.occurs_at, 'HH:mm')}h
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-500">
+                Nenhuma atividade cadastrada nessa data.
+              </p>
+            )}
           </div>
-        </div>
-      </div>
+        )
+      })}
     </div>
   )
 }

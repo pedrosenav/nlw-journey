@@ -1,7 +1,28 @@
-import { CircleDashed, UserCog } from 'lucide-react'
+import { CheckCircle2, CircleDashed, UserCog } from 'lucide-react'
 import { Button } from '../components/button'
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { api } from '../../lib/axios'
+
+interface Participant {
+  id: string
+  name: string | null
+  email: string
+  is_confirmed: boolean
+}
 
 export function Guests() {
+  const { tripId } = useParams()
+  const [participants, setParticipants] = useState<Participant[]>([])
+
+  useEffect(() => {
+    api
+      .get(`/trips/${tripId}/participants`)
+
+      .then((res) => setParticipants(res.data.participants))
+      .catch((err) => console.log(err))
+  }, [tripId])
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Convidados</h2>
@@ -9,31 +30,29 @@ export function Guests() {
       {/* Guests List */}
       <div className="space-y-5">
         {/* Guest Item */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <span className="block font-medium text-zinc-100">
-              Jessica White
-            </span>
-            <span className="block truncate text-sm text-zinc-400">
-              jessica.white44@yahoo.com
-            </span>
-          </div>
+        {participants?.map((participant, i) => {
+          return (
+            <div
+              key={participant.id}
+              className="flex items-center justify-between gap-4"
+            >
+              <div className="space-y-1.5">
+                <span className="block font-medium text-zinc-100">
+                  {participant.name ?? `Convidado ${i}`}
+                </span>
+                <span className="block truncate text-sm text-zinc-400">
+                  {participant.email}
+                </span>
+              </div>
 
-          <CircleDashed className="size-5 shrink-0 text-zinc-400" />
-        </div>
-
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <span className="block font-medium text-zinc-100">
-              Dr. Rita Pacocha
-            </span>
-            <span className="block truncate text-sm text-zinc-400">
-              lacy.stiedemann@gmail.com
-            </span>
-          </div>
-
-          <CircleDashed className="size-5 shrink-0 text-zinc-400" />
-        </div>
+              {participant.is_confirmed ? (
+                <CheckCircle2 className="size-5 shrink-0 text-lime-300" />
+              ) : (
+                <CircleDashed className="size-5 shrink-0 text-zinc-400" />
+              )}
+            </div>
+          )
+        })}
       </div>
 
       <Button variant="secondary" size="full">
